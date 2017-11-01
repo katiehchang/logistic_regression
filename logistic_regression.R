@@ -111,37 +111,17 @@ str(NH11$everwrk) # check stucture of everwrk
 levels(NH11$everwrk) # check levels of everwrk
 # collapse all missing values to NA
 NH11$everwrk <- factor(NH11$everwrk, levels=c("2 No", "1 Yes"))
+
+str(NH11$r_maritl) # check stucture of r_maritl
+levels(NH11$r_maritl) # check levels of r_maritl
+summary(NH11$r_maritl) # check summary of r_marital and notice that levels 0 and 3 are not used
+# remove unused levels
+NH11$r_maritl = droplevels(NH11$r_maritl)
+
 # run our regression model
 wrk.out <- glm(everwrk~age_p+r_maritl,
                data=NH11, family="binomial")
 coef(summary(wrk.out))
 
-##   transform the coefficients to make them easier to interpret
-
-wrk.out.tab <- coef(summary(wrk.out))
-wrk.out.tab[, "Estimate"] <- exp(coef(wrk.out))
-wrk.out.tab
-
-##   use the `predict()' function to make direct statements about the
-##   predictors in our model. For example, "What is the probability
-##   of working for each level of marital status?"
-
-# Create a dataset with predictors set at desired levels
-## using r_maritl = levels(NH11$r_marital) includes all levels but levels 0 and 3 cause errors -- why??
-predDat2 <- with(NH11,
-                expand.grid(r_maritl = c("1 Married - spouse in household", 
-                                         "2 Married - spouse not in household", 
-                                         "4 Widowed",
-                                         "5 Divorced",
-                                         "6 Separated",
-                                         "7 Never married",
-                                         "8 Living with partner",
-                                         "9 Unknown marital status"),
-                            age_p = mean(age_p, na.rm = TRUE)))
-
-# predict working at those levels
-cbind(predDat2, predict(wrk.out, type = "response",
-                       se.fit = TRUE, interval="confidence",
-                       newdata = predDat2))
-
-plot(allEffects(wrk.out))
+##   predict the probability of working for each level of marital status
+data.frame(Effect("r_maritl", wrk.out))
